@@ -35,9 +35,9 @@ def test_data(sess,params,X,Y,index_list,S_list,R_L_list,F_list,e, pre_test,n_ba
         (dic_state,x,y,r,f,_,state_reset_counter_lst,_)= \
             th.prepare_batch(is_test,index_list, minibatch_index, batch_size,
                                        S_list, dic_state, params, Y, X, R_L_list,F_list,state_reset_counter_lst)
-        feed=th.get_feed(tracker,params,r,x,y,I,dic_state, is_training=0)
+        feed=th.get_feed(Model,params,r,x,y,I,dic_state, is_training=0)
 
-        states,final_output,final_pred_output,final_meas_output,y =sess.run([tracker.states,tracker.final_output,tracker.final_pred_output,tracker.final_meas_output,tracker.y], feed)
+        states,final_output,final_pred_output,final_meas_output,y =sess.run([Model.states,Model.final_output,Model.final_pred_output,Model.final_meas_output,Model.y], feed)
 
         for k in states.keys():
             dic_state[k] = states[k]
@@ -69,7 +69,7 @@ def test_data(sess,params,X,Y,index_list,S_list,R_L_list,F_list,e, pre_test,n_ba
     ut.log_write(s,params)
     return total_loss
 
-def train(tracker,params):
+def train(Model,params):
     I= np.asarray([np.diag([1.0]*params['n_output']) for i in range(params["batch_size"])],dtype=np.float32)
 
     batch_size=params["batch_size"]
@@ -78,7 +78,7 @@ def train(tracker,params):
     show_every=100
     deca_start=3
     pre_best_loss=10000
-    with tf.Session(config=gpu_config) as sess:
+    with tf.Session() as sess:#config=gpu_config
         tf.global_variables_initializer().run()
         saver = tf.train.Saver()
         # if params["model"] == "kfl_QRf":
@@ -89,7 +89,7 @@ def train(tracker,params):
             #     params["est_file"] = params["est_file"] + mfile.split('/')[-1].replace('.ckpt', '') + '/'
             #     print "Loaded Model: %s" % ckpt.model_checkpoint_path
         # if params["model"] == "kfl_QRf":
-        #     for var in tracker.tvars:
+        #     for var in Model.tvars:
         #         path = '/mnt/Data1/hc/tt/cp/weights/' + var.name.replace('transitionF/','')
         #         if os.path.exists(path+'.npy'):
         #             val=np.load(path+'.npy')
@@ -97,15 +97,15 @@ def train(tracker,params):
         #     print 'PreTrained LSTM model loaded...'
 
 
-        # sess.run(tracker.predict())
+        # sess.run(Model.predict())
         print 'Training model:'+params["model"]
         noise_std = params['noise_std']
         new_noise_std=0.0
         for e in range(num_epochs):
             if e>(deca_start-1):
-                sess.run(tf.assign(tracker.lr, params['lr'] * (decay_rate ** (e))))
+                sess.run(tf.assign(Model.lr, params['lr'] * (decay_rate ** (e))))
             else:
-                sess.run(tf.assign(tracker.lr, params['lr']))
+                sess.run(tf.assign(Model.lr, params['lr']))
             total_train_loss=0
 
             state_reset_counter_lst=[0 for i in range(batch_size)]
@@ -136,8 +136,8 @@ def train(tracker,params):
                        noise=np.random.normal(0.0,new_noise_std,x.shape)
                        x=noise+x
 
-                feed = th.get_feed(tracker, params, r, x, y, I, dic_state, is_training=1)
-                train_loss,states,_ = sess.run([tracker.cost,tracker.states,tracker.train_op], feed)
+                feed = th.get_feed(Model, params, r, x, y, I, dic_state, is_training=1)
+                train_loss,states,_ = sess.run([Model.cost,Model.states,Model.train_op], feed)
 
                 for k in states.keys():
                     dic_state[k] = states[k]
@@ -180,39 +180,41 @@ rnn_input_prob_lst=[1.0]
 seq_lst=[50]
 reset_state=[5,100,20]
 normalise_data_lst=[3]
-params = config.get_params()
-params["mfile"]='/mnt/Data1/hc/tt/cp/lstm_nostate1/cp/'
+# To get current status of params#
+params = config.get_params() # To get current status of params#
+###############################
+params["mfile"]='/mnt/Data1/hc/tt/cp/lstm_nostate1/cp/' # adding more values to params#
 rnn_keep_prob=0.8
 input_keep_prob=1.0
 params['rnn_keep_prob']=rnn_keep_prob
 params['input_keep_prob']=input_keep_prob
-seq=50
-res=5
+seq=50 #what does this value signify?
+res=5 #what does this value signify?
 with tf.Graph().as_default():
     print "seq: ============== %s  ============" % seq
     print "reset_state: ============== %s  ============" % res
     print "rnn_keep_prob: ============== %s  ============" % rnn_keep_prob
-    params['normalise_data'] = 4
-    params['reset_state']=res
-    params['seq_length']=seq
-    params["reload_data"] = 0
-    params = config.update_params(params)
-    params["model"] = "kfl_QRf"
+    params['normalise_data'] = 4 # adding more values to params, what does this value signify? #
+    params['reset_state']=res # adding more values to params, what does this value signify? #
+    params['seq_length']=seq # adding more values to params, what does this value signify? #
+    params["reload_data"] = 0 # adding more values to params, what does this value signify? #
+    params = config.update_params(params) # New param values are updated#
+    #params["model"] = "kfl_QRf"
     if params["model"] == "lstm":
-        tracker = lstm(params=params)
+        Model = lstm(params=params)
     elif params["model"] == "kfl_QRf":
-        tracker = kfl_QRf(params=params)
+        Model = kfl_QRf(params=params)
     elif params["model"] == "kfl_Rf":
-        tracker = kfl_Rf(params=params)
+        Model = kfl_Rf(params=params)
     elif params["model"] == "kfl_QRFf":
-        tracker = kfl_QRFf(params=params)
+        Model = kfl_QRFf(params=params)
     elif params["model"] == "kfl_K":
-        tracker = kfl_K(params=params)
-    params["rn_id"]="dobuleloss081500_nrm4_seq%i_res%i_keep%f_lr%f"%(seq,res,rnn_keep_prob,params["lr"])
-    params=config.update_params(params)
+        Model = kfl_K(params=params)
+    params["rn_id"]="dobuleloss081500_nrm4_seq%i_res%i_keep%f_lr%f"%(seq,res,rnn_keep_prob,params["lr"]) # adding more values to params, what does this value signify? #
+    params=config.update_params(params) # New param values are updated#
     (params, X_train, Y_train, F_list_train, G_list_train, S_Train_list, R_L_Train_list,
              X_test, Y_test, F_list_test, G_list_test, S_Test_list, R_L_Test_list) = \
-            dut.prepare_training_set(params)
+            dut.prepare_training_set(params) # This is where the observation set will be given#
     show_every = 1
     (index_train_list, S_Train_list) = dut.get_seq_indexes(params, S_Train_list)
     (index_test_list, S_Test_list) = dut.get_seq_indexes(params, S_Test_list)
@@ -226,4 +228,4 @@ with tf.Graph().as_default():
     params['test_size'] = len(X_test) * params['seq_length']
     ut.start_log(params)
     ut.log_write("Model training started", params)
-    train(tracker,params)
+    train(Model,params)

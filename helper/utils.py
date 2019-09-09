@@ -334,18 +334,17 @@ def get_state_list(params):
     if params["model"]=="lstm":
         dic_state["lstm_t"]=get_zero_state(params)
         dic_state["lstm_pre"]=get_zero_state(params)
+    elif params["model"] == "kfl_K":
+        dic_state["K_t "] = get_zero_state(params, t='K')
+        dic_state["K_pre "] = get_zero_state(params, t='K')
+    elif params["model"] == "kfl_QRFf":
+        dic_state["Q_t "] = get_zero_state(params, t='Q')
+        dic_state["Q_pre"] = get_zero_state(params, t='Q')
+        dic_state["R_t"] = get_zero_state(params, t='R')
+        dic_state["R_pre"] = get_zero_state(params, t='R')
     else:
         dic_state["F_t"]=get_zero_state(params)
         dic_state["F_pre"]=get_zero_state(params)
-        if params["model"]=="kfl_K":
-            dic_state["K_t "]=get_zero_state(params, t='K')
-            dic_state["K_pre "]=get_zero_state(params, t='K')
-
-        if params["model"]=="kfl_QRFf":
-            dic_state["Q_t "]=get_zero_state(params, t='Q')
-            dic_state["Q_pre"]=get_zero_state(params, t='Q')
-            dic_state["R_t"]=get_zero_state(params, t='R')
-            dic_state["R_pre"]=get_zero_state(params, t='R')
 
 
     return dic_state

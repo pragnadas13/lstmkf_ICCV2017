@@ -12,7 +12,11 @@ def get_params():
    params["rn_id"]="pretrained" #running id, model
    params["load_mode"]=0#0=full training,1=only test set,2=full dataset, 3=hyper param searc
    params["notes"]="we traing LSTM with with [n_input] input" #running id
-   params["model"]="inception_resnet_v2"#kccnr,dccnr
+   ########################################################################
+   #It was this params["model"]="inception_resnet_v2"#kccnr,dccnr##########
+   ### changed by P to include kfl_Qrf from here and not in the main program###
+   ############################################################################
+   params["model"] = "kfl_QRf"
    params["optimizer"]="Adam" #1=classic kcnnr, 2=patch, 3=conv, 4 =single channcel
    params['write_est']=False
 
