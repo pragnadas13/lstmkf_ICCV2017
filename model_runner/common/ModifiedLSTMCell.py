@@ -20,14 +20,12 @@ class ModifiedLSTMCell(RNNCell):
   an optional projection layer.
   """
 
-  def __init__(self, num_units, use_peepholes=False, cell_clip=None,
-               initializer=None, num_unit_shards=1, forget_bias=1.0, state_is_tuple=False,
-               activation=tanh,is_training=True
+  def __init__(self, initializer, use_peepholes=True, cell_clip=None, forget_bias=1.0, activation=tanh,is_training=True
                ):
     """Initialize the parameters for an LSTM cell.
 
     Args:
-      num_units: int, The number of units in the LSTM cell
+      num_units: int, The size of hidden vector in the LSTM cell
       input_size: Deprecated and unused.
       use_peepholes: bool, set True to enable diagonal/peephole connections.
       cell_clip: (optional) A float value, if provided the cell state is clipped
@@ -44,34 +42,23 @@ class ModifiedLSTMCell(RNNCell):
         along the column axis.  This latter behavior will soon be deprecated.
       activation: Activation function of the inner states.
     """
-    if not state_is_tuple:
-      logging.warn("%s: Using a concatenated state is slower and will soon be "
-                   "deprecated.  Use state_is_tuple=True.", self)
-    #if input_size is not None:
-    #logging.warn("%s: The input_size parameter is deprecated.", self)
-    self._num_units = num_units
+
+
+    self._forget_bias = forget_bias
     self._use_peepholes = use_peepholes
     self._cell_clip = cell_clip
     self._initializer = initializer
-    self._num_proj = num_proj
-    self._proj_clip = proj_clip
-    self._num_unit_shards = num_unit_shards
-    self._num_proj_shards = num_proj_shards
-    self._forget_bias = forget_bias
-    self._state_is_tuple = state_is_tuple
     self._activation = activation
     self._is_training = is_training
 
-    if num_proj:
-      self._state_size = (
-          LSTMStateTuple(num_units, num_proj)
-          if state_is_tuple else num_units + num_proj)
-      self._output_size = num_proj
-    else:
-      self._state_size = (
-          LSTMStateTuple(num_units, num_units)
-          if state_is_tuple else 2 * num_units)
-      self._output_size = num_units
+    #self._num_proj = num_proj
+    #self._proj_clip = proj_clip
+    #self._num_unit_shards = num_unit_shards
+    #self._num_proj_shards = num_proj_shards
+    # self._num_units = num_units
+    #self._state_is_tuple = state_is_tuple
+
+
 
   @property
   def state_size(self):
@@ -109,13 +96,14 @@ class ModifiedLSTMCell(RNNCell):
     ls_internal={}
     #num_proj = self._num_units if self._num_proj is None else self._num_proj
 
-    if self._state_is_tuple:
-      (c_prev, m_prev) = state
-    else:
-      c_prev = array_ops.slice(state, [0, 0], [-1, self._num_units])
-      m_prev = array_ops.slice(state, [0, self._num_units], [-1, num_proj])
-    ls_internal["c_prev"]=c_prev
-    ls_internal["m_prev"]=m_prev
+    # if self._state_is_tuple:
+    #   (c_prev, m_prev) = state
+    # else:
+    #   c_prev = array_ops.slice(state, [0, 0], [-1, self._num_units])
+    #   m_prev = array_ops.slice(state, [0, self._num_units], [-1, num_proj])
+    # ls_internal["c_prev"]=c_prev
+    # ls_internal["m_prev"]=m_prev
+
     dtype = inputs.dtype
     input_size = inputs.get_shape().with_rank(2)[1]
     if input_size.value is None:

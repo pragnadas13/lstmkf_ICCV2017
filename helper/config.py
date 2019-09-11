@@ -34,7 +34,7 @@ def get_params():
    params['Knlayer'] = 3  # LSTM
    params['Flayer'] = 1  # LSTM
    params['n_output']= 48
-   params['n_hidden']= 512
+   params['n_hidden']= 3
    params['Qn_hidden']= 256
    params['Rn_hidden']= 256
    params['Kn_hidden']= 128

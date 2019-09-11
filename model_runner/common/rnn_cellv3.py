@@ -246,7 +246,7 @@ class LSTMStateTuple(_LSTMStateTuple):
   __slots__ = ()
 
   @property
-  def dtype(self):
+  def checkDtype(self):
     (c, h) = self
     if not c.dtype == h.dtype:
       raise TypeError("Inconsistent internal state: %s vs %s" %
